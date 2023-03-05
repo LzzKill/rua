@@ -1,0 +1,32 @@
+ninja_required_version = 1.5
+cc = gcc
+cflags = -Wall -O2
+cflags_g = -g -c
+
+rule o
+  command = $cc $cflags $in -c -o $out
+  description = Compile $in to $out
+build Error.o : o source/Error.c
+build Lexer.o : o source/Lexer.c
+build Rua.o : o source/Rua.c
+build All : phony Error.o Lexer.o Rua.o
+
+rule debug
+  command = $cc $cflags_g $in -o $out
+  description = Compile $in to $out by DebugMode
+build ErrorDebug.o : debug source/Error.c
+build LexerDebug.o : debug source/Lexer.c
+build RuaDebug.o : debug source/Rua.c
+build AllDebug : phony ErrorDebug.o LexerDebug.o RuaDebug.o
+
+rule link
+  command = $cc $cflags $in -o rua
+  description = link all file
+build rua : link Error.o Lexer.o Rua.o
+build all : phony All rua
+
+build ruaDebug : link ErrorDebug.o LexerDebug.o RuaDebug.o
+build debug : phony AllDebug ruaDebug
+
+default all
+
