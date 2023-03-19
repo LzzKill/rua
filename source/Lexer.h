@@ -1,5 +1,6 @@
-#include <stdio.h>
 
+#ifndef Lexer
+#	define Lexer
 // clang-format off
 enum RTokens {
   RT_TRUE,    RT_FALSE,   RT_IF,      RT_ELSE,      RT_ELSEIF,
@@ -15,12 +16,12 @@ enum RTokens {
 };
 // clang-format on
 
-static const char* const RuaTokens [] = {
-   "true", "false", "if",  "else", "elseif", "function", "while", "break", "contiune",
-   "for",  "do",    "end", "in",   "global", "return",   "nil",   "goto",  "registered",
+static const char* const RuaTokens[] = {
+  "true", "false", "if",  "else", "elseif", "function", "while", "break", "contiune",
+  "for",  "do",    "end", "in",   "global", "return",   "nil",   "goto",  "registered",
 
-   "==",   "!=",    ">=",  "<=",   "<<",     ">>",       "||",    "&&",    "!",
-   "..",   "...",   "//",  "++",   "--"};
+  "==",   "!=",    ">=",  "<=",   "<<",     ">>",       "||",    "&&",    "!",
+  "..",   "...",   "//",  "++",   "--"};
 
 typedef struct {
 	char*        word;
@@ -32,13 +33,14 @@ typedef struct {
 typedef struct {
 	tokenStruct* tokenGroup;
 	unsigned int length;
-  int hasError;
+	int          hasError;
 } tokenGroup;
 
-#define LONGEST_KEYWORD 10
-#define SHORTEST_KEYWORD 2
-#define MANY_KEYWORD 18
-// function
+#	define LONGEST_KEYWORD 10
+#	define SHORTEST_KEYWORD 2
+#	define MANY_KEYWORD 18
+
+#endif// !Lexer
 
 void       free_tokenGroup(tokenGroup group);
 tokenGroup makeTokenGroup(const char* filename);
