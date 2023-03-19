@@ -20,7 +20,7 @@ build RuaDebug.o : debug source/Rua.c
 build AllDebug : phony ErrorDebug.o LexerDebug.o RuaDebug.o
 
 rule link
-  command = $cc $cflags $in -o rua
+  command = $cc $cflags $in -o $out
   description = link all file
 build rua : link Error.o Lexer.o Rua.o
 build all : phony All rua
