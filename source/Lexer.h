@@ -1,6 +1,8 @@
 
 #ifndef Lexer
 #	define Lexer
+
+#include <stdio.h>
 // clang-format off
 enum RTokens {
   RT_TRUE = -40,
@@ -44,7 +46,7 @@ typedef struct {
 #endif// !Lexer
 
 void       free_tokenGroup(tokenGroup group);
-tokenGroup makeTokenGroup(const char* filename);
+tokenGroup makeTokenGroup(FILE* file);
 int        check(char* word, int len);
 
 void printTokenGroup(tokenGroup group);

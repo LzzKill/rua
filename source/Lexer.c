@@ -78,10 +78,9 @@ tokenStruct readnumber(FILE* file, unsigned int line)
 	if(length) G.tokenGroup[G.length].type = RT_EOL;
 
 
-tokenGroup makeTokenGroup(const char* filename)
+tokenGroup makeTokenGroup(FILE* file)
 {
 	tokenGroup G    = {NULL, 0, 0};
-	FILE*      file = fopen(filename, "r");
 	char       c;
 
 	unsigned int line = 0, length = 0;
@@ -204,7 +203,6 @@ tokenGroup makeTokenGroup(const char* filename)
 		}
 	}
 	if(word != NULL) free(word);
-	fclose(file);
 	return G;
 }
 
