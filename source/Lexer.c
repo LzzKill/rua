@@ -10,25 +10,24 @@ int check(char* word, int len)
 {
 	if(len >= SHORTEST_KEYWORD && len <= LONGEST_KEYWORD) {
 		for(int i = 0; i < MANY_KEYWORD; i++) {
-			if(!strcmp(word, RuaTokens[i])) return i;
+			if(!strcmp(word, RuaTokens[i])) return i - 40;
 		}
 	}
 	return RT_NAME;
 }
 #define nextchar(c) nextChar(file, c)
 
-char nextChar(FILE* file, char c)
+inline char nextChar(FILE* file, char c)
 {
 	if(fgetc(file) == c) return 1;
 	fseek(file, -1, SEEK_CUR);
 	return 0;
 }
 
-int isfloat(char c)
+inline int isfloat(char c)
 {
 	int i = c;
-	if((i >= '0' && i <= '9') || i == '.') return 1;
-	return 0;
+	return ((i >= '0' && i <= '9') || i == '.') ? 1 : 0;
 }
 
 tokenStruct readnumber(FILE* file, unsigned int line)
@@ -50,52 +49,48 @@ tokenStruct readnumber(FILE* file, unsigned int line)
 	return T;
 }
 
-#define newTokenGroup                                                         \
-	G.tokenGroup = realloc(G.tokenGroup, sizeof(tokenStruct) * (G.length + 1)); \
-                                                                              \
-	G.tokenGroup[G.length].line   = line;                                       \
-	G.tokenGroup[G.length].length = 0;                                          \
-	G.tokenGroup[G.length].type   = 0;                                          \
+#define newTokenGroup                                                                          \
+	G.tokenGroup                  = realloc(G.tokenGroup, sizeof(tokenStruct) * (G.length + 1)); \
+	G.tokenGroup[G.length].line   = line;                                                        \
+	G.tokenGroup[G.length].length = 0;                                                           \
+	G.tokenGroup[G.length].type   = 0;                                                           \
 	G.tokenGroup[G.length].word   = NULL;
 
-#define endTokenGroup                                                      \
-	if(length) {                                                             \
-		newTokenGroup;                                                         \
-		int i;                                                                 \
-		if((i = check(word, length)) == RT_NAME) {                             \
-			G.tokenGroup[G.length].word =                                        \
-			  realloc(G.tokenGroup[G.length].word, (length + 1) * sizeof(char)); \
-			memcpy(G.tokenGroup[G.length].word, word, length);                   \
-			G.tokenGroup[G.length].word[length++] = '\0';                        \
-			G.tokenGroup[G.length].length         = length;                      \
-			G.tokenGroup[G.length++].type         = RT_NAME;                     \
-		}                                                                      \
-		else {                                                                 \
-			G.tokenGroup[G.length].type = i;                                     \
-			free(G.tokenGroup[G.length++].word);                                 \
-		}                                                                      \
-		length = 0;                                                            \
-		word   = (char*)calloc(2, sizeof(char));                               \
+#define endTokenGroup                                                 \
+	if(length) {                                                        \
+		newTokenGroup;                                                    \
+		int i;                                                            \
+		if((i = check(word, length)) == RT_NAME) {                        \
+			G.tokenGroup[G.length].word = calloc(length + 3, sizeof(char)); \
+			memcpy(G.tokenGroup[G.length].word, word, length);              \
+			G.tokenGroup[G.length].word[length++] = '\0';                   \
+			G.tokenGroup[G.length].length         = length;                 \
+			G.tokenGroup[G.length++].type         = RT_NAME;                \
+		}                                                                 \
+		else                                                              \
+			G.tokenGroup[G.length].type = i;                                \
+		length = 0;                                                       \
+		word   = (char*)calloc(2, sizeof(char));                          \
 	}
+#define EndTokenGroup \
+	endTokenGroup;      \
+	newTokenGroup;      \
+	if(length) G.tokenGroup[G.length].type = RT_EOL;
 
-/*
- *  All_Step:
- *  1: New
- *  2: Set
- *  3: Free
- *
- * */
+
 tokenGroup makeTokenGroup(const char* filename)
 {
-	tokenGroup G    = {(tokenStruct*)calloc(2, sizeof(tokenStruct)), 0, 0};
+	tokenGroup G    = {NULL, 0, 0};
 	FILE*      file = fopen(filename, "r");
 	char       c;
 
 	unsigned int line = 0, length = 0;
-	char*        word = calloc(2, sizeof(char));
+	char*        word = NULL;
 	while((c = fgetc(file)) != EOF) {
 		switch(c) {
-			case '\n':
+			case ';':
+			case '\n': EndTokenGroup; break;
+
 			case '\r': G.tokenGroup[G.length].line++;
 			case '\f':
 			case ' ': endTokenGroup; break;
@@ -112,7 +107,6 @@ tokenGroup makeTokenGroup(const char* filename)
 			case '9': {
 				endTokenGroup;
 				newTokenGroup;
-				free(G.tokenGroup[G.length].word);
 				G.tokenGroup[G.length++] = readnumber(file, line);
 				break;
 			}
@@ -128,11 +122,11 @@ tokenGroup makeTokenGroup(const char* filename)
 			case '^':
 			case ':':
 			case '?':
+			case ',':
 			case '*': {
 				endTokenGroup;
 				newTokenGroup;
 				G.tokenGroup[G.length].type = c;
-				free(G.tokenGroup[G.length++].word);
 				break;
 			}
 			case '\'':
@@ -148,8 +142,7 @@ tokenGroup makeTokenGroup(const char* filename)
 					word[length++] = tmp;
 				}
 				newTokenGroup;
-				G.tokenGroup[G.length].word =
-				  realloc(G.tokenGroup[G.length].word, (length + 1) * sizeof(char));
+				G.tokenGroup[G.length].word = calloc(length + 3, sizeof(char));
 				memcpy(G.tokenGroup[G.length].word, word, length);
 				G.tokenGroup[G.length].word[length++] = '\0';
 				G.tokenGroup[G.length].length         = length;
@@ -168,60 +161,52 @@ tokenGroup makeTokenGroup(const char* filename)
 			case '+': {
 				endTokenGroup;
 				newTokenGroup;
-				free(G.tokenGroup[G.length].word);
 				G.tokenGroup[G.length++].type = (nextchar('+') ? RT_SELFADD : '+');
 				break;
 			}
 			case '-': {
 				endTokenGroup;
 				newTokenGroup;
-				free(G.tokenGroup[G.length].word);
 				G.tokenGroup[G.length++].type = (nextchar('-') ? RT_SELFSUB : '-');
 				break;
 			}
 			case '/': {
 				endTokenGroup;
 				newTokenGroup;
-				free(G.tokenGroup[G.length].word);
 				G.tokenGroup[G.length++].type = (nextchar('/') ? RT_IDIV : '/');
 				break;
 			}
 			case '=': {
 				endTokenGroup;
 				newTokenGroup;
-				free(G.tokenGroup[G.length].word);
 				G.tokenGroup[G.length++].type = (nextchar('=') ? RT_EQ : '=');
 				break;
 			}
 			case '!': {
 				endTokenGroup;
 				newTokenGroup;
-				free(G.tokenGroup[G.length].word);
 				G.tokenGroup[G.length++].type = (nextchar('=') ? RT_NE : '!');
 				break;
 			}
 			case '>': {
 				endTokenGroup;
 				newTokenGroup;
-				free(G.tokenGroup[G.length].word);
 				G.tokenGroup[G.length++].type = (nextchar('>') ? RT_SHR : (nextchar('=') ? RT_GE : '>'));
 				break;
 			}
 			case '<': {
 				endTokenGroup;
 				newTokenGroup;
-				free(G.tokenGroup[G.length].word);
 				G.tokenGroup[G.length++].type = (nextchar('<') ? RT_SHL : (nextchar('=') ? RT_LE : '<'));
 				break;
 			}
 			default: word = (char*)realloc(word, sizeof(char) * (length + 1)); word[length++] = c;
 		}
 	}
-	free(word);
+	if(word != NULL) free(word);
 	fclose(file);
 	return G;
 }
-
 
 void free_tokenGroup(tokenGroup group)
 {

@@ -3,10 +3,11 @@
 #	define Lexer
 // clang-format off
 enum RTokens {
-  RT_TRUE,    RT_FALSE,   RT_IF,      RT_ELSE,      RT_ELSEIF,
+  RT_TRUE = -40,
+  RT_FALSE,   RT_IF,      RT_ELSE,      RT_ELSEIF,
   RT_FUNCTION,RT_WHILE,   RT_BREAK,   RT_CONTIUNE,  RT_FOR,
   RT_DO,      RT_END,     RT_IN,      RT_GLOBAL,    RT_RETURN,
-  RT_NIL,     RT_GOTO,    RT_REGISTERED,
+  RT_NIL,     RT_GOTO,    RT_REGISTERED, RT_EOL,
 
   RT_EQ,    RT_NE,    RT_GE,    RT_LE,    RT_SHR, RT_SHL,
   RT_OR,    RT_AND,   RT_NOT,   RT_LINK,  RT_ANY, RT_IDIV,
