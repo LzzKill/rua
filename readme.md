@@ -1,9 +1,3 @@
-# Rua - The Rua Language
+﻿# Moonlisp，一个lisp方言
 
-Devloper(some code isn't push)
-
-Lexer has done!
-
-# License
-
-THIS APPLICATION USED BSD4 LICENSE
+原来是rua语言，但是写不下去了，改成lisp了。
