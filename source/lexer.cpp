@@ -9,8 +9,10 @@
 
 module;
 #include <cstdio>
+#include <memory>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 module moonlisp.lexer;
@@ -18,10 +20,11 @@ module moonlisp.lexer;
 import moonlisp.constant;
 import moonlisp.exception;
 
+
 char moonlisp::Lexer::next()
 {
   if (this->inputPos < this->input.length()) {
-    this->current = this->input[this->inputPos++];
+    this->current = this->input[this->inputPos++]; 
     this->column++;
     if (this->current == '\r') {
       this->line++;
@@ -33,9 +36,9 @@ char moonlisp::Lexer::next()
       this->line++;
       this->column = 0;
     }
-    return this->current;
   }
-  return EOF;
+  else this->current = EOF;
+  return this->current;
 }
 
 char moonlisp::Lexer::peek()
@@ -58,15 +61,17 @@ std::string moonlisp::Lexer::findSymbol()
       temp.push_back(this->next());
   }
   }
+  this->next();
   return temp;
 }
 
-std::string moonlisp::Lexer::findNumber()
+std::unique_ptr<moonlisp::LexerStruct> moonlisp::Lexer::findNumber()
 {
   std::string result{this->current};
   bool isFloat = false, dotInEnd = false;
-  while (util::isNumber(this->next()) or this->current == '.') {
-    if (this->current == '.') {
+  while (util::isNumber(this->peek()) or
+         this->peek() == '.') { // 保证下一个是数字或者点
+    if (this->next() == '.') {
       if (isFloat) {
         throw LexerError(this->line, this->column, "multiple dots");
         continue;
@@ -79,10 +84,14 @@ std::string moonlisp::Lexer::findNumber()
       dotInEnd = false;
     result.push_back(this->current);
   }
-  if (dotInEnd)
+  if (dotInEnd) {
     throw LexerError(this->line, this->column, "dot in end");
-  return result;
+    result.push_back(0);
+  }
+  this->next();
+  return this->makeLexerStruct(isFloat? FLOAT : NUMBER, result);
 }
+
 std::string moonlisp::Lexer::findString()
 {
   std::string result;
@@ -118,57 +127,71 @@ std::string moonlisp::Lexer::findString()
   if (this->current == EOF) {
     throw LexerError(this->line, this->column, "string not closed");
   }
+  this->next();
   return result;
+}
+
+std::unique_ptr<moonlisp::LexerStruct>
+moonlisp::Lexer::makeLexerStruct(LexerType type, std::string word)
+{
+  return std::make_unique<LexerStruct>(
+      LexerStruct{type, std::move(word), this->line, this->column});
 }
 
 moonlisp::Lexer::Lexer(std::string_view input)
-    : input(input), line(1), column(0), inputPos(0),
-      current((input.empty()) ? EOF : input[0])
+    : input(input), line(1), column(0), inputPos(0), current(EOF)
 {
+  this->next();
 }
 
-std::vector<moonlisp::LexerStruct> moonlisp::Lexer::getGroupStruct()
+std::vector<std::unique_ptr<moonlisp::LexerStruct>>
+moonlisp::Lexer::getGroupStruct()
 {
-  std::vector<moonlisp::LexerStruct> result;
-  LexerStruct res;
-  do {
+  std::vector<std::unique_ptr<LexerStruct>> result;
+  std::unique_ptr<LexerStruct> res;
+  bool e = true;
+  while (e) {
     res = this->getNext();
-    result.emplace_back(res);
-  } while (res.type != _EOF);
+    if (res->type == _EOF)
+      e = false;
+    result.emplace_back(std::move(res));
+  }
   return result;
 }
 
-moonlisp::LexerStruct moonlisp::Lexer::getNext()
+// 我们判定需要的是this-> current,不是this->next()
+//
+
+std::unique_ptr<moonlisp::LexerStruct> moonlisp::Lexer::getNext()
 {
   std::string text{};
   while (this->current != EOF) {
     if (util::isNext(this->current)) {
       this->next();
       if (!text.empty())
-        return LexerStruct{NAME, text, this->line, this->column};
+        return this->makeLexerStruct(NAME, text);
       continue;
     }
     if (util::isSymbol(this->current)) {
       if (!text.empty())
-        return LexerStruct{NAME, text, this->line, this->column};
-      this->next();
-      return LexerStruct{SYMBOL, this->findSymbol(), this->line, this->column};
+        return this->makeLexerStruct(NAME, text);
+      return this->makeLexerStruct(SYMBOL, findSymbol());
     }
 
     if (util::isNumber(this->current)) {
       if (!text.empty())
         goto _DEFAULT;
-      return LexerStruct{NUMBER, findNumber(), this->line, this->column};
+      return findNumber(); // include double able: number or float;
     }
     if (util::isWhitespace(this->current)) {
       if (!text.empty())
-        return LexerStruct{NAME, text, this->line, this->column};
+        return this->makeLexerStruct(NAME, text);
       this->next();
       continue;
     }
     if (util::isNote(this->current)) {
       if (!text.empty())
-        return LexerStruct{NAME, text, this->line, this->column};
+        return this->makeLexerStruct(NAME, text);
       this->next();
       while (!util::isNext(this->current) and this->current != EOF)
         this->next();
@@ -176,12 +199,12 @@ moonlisp::LexerStruct moonlisp::Lexer::getNext()
     }
     if (this->current == '\"' or this->current == '\'') {
       if (!text.empty())
-        return LexerStruct{NAME, text, this->line, this->column};
-      return LexerStruct{STRING, findString(), this->line, this->column};
+        return this->makeLexerStruct(NAME, text);
+      return this->makeLexerStruct(STRING, findString());
     }
   _DEFAULT:
     text.push_back(this->current);
     this->next();
   }
-  return LexerStruct{_EOF, {}, this->line, this->column};
+  return this->makeLexerStruct(_EOF, {});
 }

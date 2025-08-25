@@ -9,6 +9,7 @@
 
 module;
 
+#include <memory>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -20,6 +21,7 @@ export namespace moonlisp
   enum LexerType
   {
     NUMBER,
+    FLOAT,
     NAME,
     STRING,
     SYMBOL,
@@ -34,6 +36,8 @@ export namespace moonlisp
     unsigned int column;
   };
 
+
+  // TODO: 迭代器
   class Lexer
   {
     private:
@@ -45,13 +49,15 @@ export namespace moonlisp
     char peek();
 
     std::string findSymbol();
-    std::string findNumber();
+    std::unique_ptr<moonlisp::LexerStruct> findNumber();
     std::string findString();
+
+    inline std::unique_ptr<LexerStruct> makeLexerStruct(LexerType, std::string);
 
     public:
     explicit Lexer(std::string_view);
-    std::vector<LexerStruct> getGroupStruct();
-    LexerStruct getNext();
+    std::vector<std::unique_ptr<LexerStruct>> getGroupStruct();
+    std::unique_ptr<LexerStruct> getNext();
   };
 
 } // namespace moonlisp

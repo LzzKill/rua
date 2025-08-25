@@ -27,7 +27,6 @@ export namespace moonlisp
   constexpr std::array NOTE_TABLE = {';', '#'};
   export namespace util
   {
-    // 使用函数而不是 lambda 对象
     template <typename Table>
     constexpr bool isInTable(const Table &table, char c)
     {

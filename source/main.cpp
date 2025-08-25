@@ -6,6 +6,7 @@
  *
  *
  * */
+#include <cstdlib>
 #include <format>
 #include <iosfwd>
 #include <iostream>
@@ -41,12 +42,15 @@ int main()
     if (text == "(exit)" or text == "(quit)")
       return 0;
     lexer = new moonlisp::Lexer(text);
-    auto group = lexer->getGroupStruct();
-    for (const auto &item : group) {
+    auto group = lexer->getNext();
+    while (group->type != moonlisp::_EOF) {
       std::cout << std::format("Type: {}, Word: {}, Line: {}, Column: {}\n",
-                               get_string(item.type), item.word, item.line,
-                               item.column);
+                               get_string(group->type), group->word, group->line,
+                               group->column);
+      group = lexer->getNext();
     }
     delete lexer;
   }
+
+  return EXIT_SUCCESS;
 }

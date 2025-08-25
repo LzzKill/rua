@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.26)
+﻿cmake_minimum_required(VERSION 3.28)  # 提高版本要求
 project(moonlisp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -11,11 +11,12 @@ add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME}
   PUBLIC
   FILE_SET CXX_MODULES
+  TYPE CXX_MODULES
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/module
   FILES
   "module/constant.ixx"
-  "module/lexer.ixx"
   "module/exception.ixx"
+  "module/lexer.ixx"
 )
 
 # Source File
@@ -25,22 +26,18 @@ target_sources(${PROJECT_NAME}
   "source/lexer.cpp"
 )
 
-target_include_directories(${PROJECT_NAME}
-  PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/module
-)
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-
 if(MSVC)
   target_compile_options(${PROJECT_NAME} PRIVATE 
     "/experimental:module"
     "/std:c++latest"
-    "/ZI"  # Dynamic Debug
+    "/permissive-"
   )
   
-  target_link_options(${PROJECT_NAME} PRIVATE "/INCREMENTAL")
-
+  set_target_properties(${PROJECT_NAME} PROPERTIES
+    VS_GLOBAL_SCAN_FOR_MODULES true
+    CXX_SCAN_FOR_MODULES ON
+  )
+  
   if(POLICY CMP0141)
     cmake_policy(SET CMP0141 NEW)
     set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
