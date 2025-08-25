@@ -135,7 +135,7 @@ std::unique_ptr<moonlisp::LexerStruct>
 moonlisp::Lexer::makeLexerStruct(LexerType type, std::string word)
 {
   return std::make_unique<LexerStruct>(
-      LexerStruct{type, std::move(word), this->line, this->column});
+      LexerStruct{type, std::move(word), this->line, this->column, this->inputPos});
 }
 
 moonlisp::Lexer::Lexer(std::string_view input)

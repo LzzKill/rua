@@ -44,9 +44,10 @@ int main()
     lexer = new moonlisp::Lexer(text);
     auto group = lexer->getNext();
     while (group->type != moonlisp::_EOF) {
-      std::cout << std::format("Type: {}, Word: {}, Line: {}, Column: {}\n",
-                               get_string(group->type), group->word, group->line,
-                               group->column);
+      std::cout << std::format(
+          "Type: {}, Word: {}, Line: {}, Column: {}, in all pos: {}\n",
+          get_string(group->type), group->word, group->line, group->column,
+          group->pos);
       group = lexer->getNext();
     }
     delete lexer;

@@ -16,17 +16,10 @@ module;
 
 export module moonlisp.lexer;
 
+import moonlisp.constant;
+
 export namespace moonlisp
 {
-  enum LexerType
-  {
-    NUMBER,
-    FLOAT,
-    NAME,
-    STRING,
-    SYMBOL,
-    _EOF
-  };
 
   struct LexerStruct
   {
@@ -34,17 +27,23 @@ export namespace moonlisp
     std::string word;
     unsigned int line;
     unsigned int column;
+    unsigned int pos;
   };
 
 
   // TODO: 迭代器
   class Lexer
   {
-    private:
     std::string_view input;
     unsigned int line, column, inputPos;
     char current;
 
+    public:
+    explicit Lexer(std::string_view);
+    std::vector<std::unique_ptr<LexerStruct>> getGroupStruct();
+    std::unique_ptr<LexerStruct> getNext();
+    
+    private:
     char next();
     char peek();
 
@@ -53,11 +52,6 @@ export namespace moonlisp
     std::string findString();
 
     inline std::unique_ptr<LexerStruct> makeLexerStruct(LexerType, std::string);
-
-    public:
-    explicit Lexer(std::string_view);
-    std::vector<std::unique_ptr<LexerStruct>> getGroupStruct();
-    std::unique_ptr<LexerStruct> getNext();
   };
 
 } // namespace moonlisp
