@@ -1,3 +1,8 @@
+﻿.vs
+.idea
+out
+*.exe
+*.dll
+*.obj
+*.pdb
 *.o
-.ninja_log
-rua
