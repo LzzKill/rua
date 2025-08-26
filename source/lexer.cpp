@@ -97,8 +97,7 @@ std::unique_ptr<moonlisp::LexerStruct> moonlisp::Lexer::findNumber()
 std::string moonlisp::Lexer::findString()
 {
   std::string result;
-  char endChar = this->current;
-  while (this->next() != endChar and this->current != EOF) {
+  while (this->next() != '"' and this->current != EOF) {
     if (this->current == '\\') {
       switch (this->next()) {
       case 'n':
@@ -198,7 +197,7 @@ std::unique_ptr<moonlisp::LexerStruct> moonlisp::Lexer::getNext()
         this->next();
       continue;
     }
-    if (this->current == '\"' or this->current == '\'') {
+    if (this->current == '\"') {
       if (!text.empty())
         return this->makeLexerStruct(NAME, text);
       return this->makeLexerStruct(STRING, findString());

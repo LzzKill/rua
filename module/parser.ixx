@@ -16,7 +16,7 @@ import moonlisp.ast;
 import moonlisp.lexer;
 import moonlisp.constant;
 
-namespace moonlisp
+export namespace moonlisp
 {
   class Parser
   {
@@ -39,5 +39,3 @@ namespace moonlisp
     bool isBracket();
   };
 } // namespace moonlisp
-
-export moonlisp::Parser;
