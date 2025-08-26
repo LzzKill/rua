@@ -18,13 +18,35 @@ export namespace moonlisp
   constexpr std::string_view AUTHOR{"LzzKill"};
   constexpr std::string_view LICENSE{"BSD-4-Clause"};
 
-  constexpr std::array SYMBOL_TABLE = {'{', '}', '[', ']', '(', ')', '!', '+',
-                                       '=', '*', '<', '>', '*', '&', '^', '%'};
+  constexpr std::array SYMBOL_TABLE = {'[', ']', '(', ')', '!', '+', '=', '*',
+                                       '<', '>', '*', '&', '^', '%', ',', '.'}; // {}可作为字面量一部分
   constexpr std::array SPACE_TABLE = {' ', '\f', '\t'};
   constexpr std::array NUMBER_TABLE = {'0', '1', '2', '3', '4',
                                        '5', '6', '7', '8', '9'};
   constexpr std::array NEXT_TABLE = {'\n', '\r'};
   constexpr std::array NOTE_TABLE = {';', '#'};
+
+  enum LexerType
+  {
+    NUMBER,
+    FLOAT,
+    NAME,
+    STRING,
+    SYMBOL,
+    _EOF
+  };
+
+  enum class ASTNodeType
+  {
+    // atom;
+    FLOAT,
+    NUMBER,
+    NAME,
+    STRING,
+    LIST,
+    PAIR,
+  };
+
   export namespace util
   {
     template <typename Table>
@@ -33,7 +55,6 @@ export namespace moonlisp
       return std::find(table.begin(), table.end(), c) != table.end();
     }
 
-    // 明确导出函数，而不是使用 auto 推导
     constexpr bool isSymbol(char c) { return isInTable(SYMBOL_TABLE, c); }
     constexpr bool isWhitespace(char c) { return isInTable(SPACE_TABLE, c); }
     constexpr bool isNumber(char c) { return isInTable(NUMBER_TABLE, c); }

@@ -53,9 +53,10 @@ std::string moonlisp::Lexer::findSymbol()
 {
   std::string temp{this->current};
   switch (this->current) {
-  case '!': //!=
-  case '<': //<=
-  case '>': //>=
+  case '!': // !=
+  case '<': // <=
+  case '>': // >=
+  case '=': // ==
   {
     if (this->peek() == '=')
       temp.push_back(this->next());
@@ -159,9 +160,6 @@ moonlisp::Lexer::getGroupStruct()
   return result;
 }
 
-// 我们判定需要的是this-> current,不是this->next()
-//
-
 std::unique_ptr<moonlisp::LexerStruct> moonlisp::Lexer::getNext()
 {
   std::string text{};
@@ -172,7 +170,9 @@ std::unique_ptr<moonlisp::LexerStruct> moonlisp::Lexer::getNext()
         return this->makeLexerStruct(NAME, text);
       continue;
     }
-    if (util::isSymbol(this->current)) {
+    if (util::isSymbol(this->current)) { // 
+      if (this->current == ',')
+        throw LexerError(this->line, this->column, "',' is not support.");
       if (!text.empty())
         return this->makeLexerStruct(NAME, text);
       return this->makeLexerStruct(SYMBOL, findSymbol());
