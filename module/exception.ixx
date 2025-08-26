@@ -28,13 +28,13 @@ export namespace moonlisp
     void show() { std::cerr << this->message << '\n'; };
     const char *what() const override { return message.c_str(); };
   };
-  class ParseError : std::exception
+  class ParserError : std::exception
   {
     private:
     std::string message;
 
     public:
-    ParseError(unsigned int line, unsigned int column, std::string message)
+    ParserError(unsigned int line, unsigned int column, std::string message)
         : message(std::format("{}, in Line: {}, Column: {}", message, line,
                               column)) { };
     void show() { std::cerr << this->message << '\n'; };

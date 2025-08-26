@@ -7,14 +7,22 @@
  *
  * */
 #include <cstdlib>
+#include <exception>
 #include <format>
 #include <iosfwd>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <string_view>
+#include <type_traits>
+#include <utility>
+#include <variant>
 
 import moonlisp.constant;
 import moonlisp.lexer;
+import moonlisp.parser;
+import moonlisp.ast;
+import moonlisp.exception;
 
 std::string_view get_string(moonlisp::LexerType lexer_type)
 {
@@ -32,25 +40,113 @@ std::string_view get_string(moonlisp::LexerType lexer_type)
   }
 }
 
+std::string_view get_string(moonlisp::ASTNodeType node_type)
+{
+  using moonlisp::ASTNodeType;
+  switch (node_type) {
+  case ASTNodeType::FLOAT:
+    return "FLOAT";
+  case ASTNodeType::LIST:
+    return "LIST";
+  case ASTNodeType::PAIR:
+    return "PAIR";
+  case ASTNodeType::NUMBER:
+    return "NUMBER";
+  case ASTNodeType::STRING:
+    return "STRING";
+  case ASTNodeType::NAME:
+    return "NAME"; // ← 缺这个！
+  }
+  return "UNKNOWN"; // ← 兜底，避免 UB
+}
+
+// 小工具：缩进
+inline std::string indent(int depth) { return std::string(depth * 2, ' '); }
+
+// 萃取：判断是否 unique_ptr<T>
+template <typename T> struct is_unique_ptr : std::false_type
+{
+};
+template <typename T> struct is_unique_ptr<std::unique_ptr<T>> : std::true_type
+{
+  using pointee = T;
+};
+
+// 获取指针或对象的“引用”统一接口
+template <typename T> decltype(auto) deref(T &x)
+{
+  if constexpr (is_unique_ptr<std::decay_t<T>>::value) {
+    return *x;
+  } else {
+    return x;
+  }
+}
+
+// 递归打印单个 Node
+inline void viewAST(const moonlisp::Node &node, int depth = 0,
+                    std::ostream &os = std::cout)
+{
+  std::visit(
+      [&](auto const &arg_raw) {
+        // 兼容 unique_ptr 与非指针持有
+        auto const &arg = deref(arg_raw);
+        using U = std::decay_t<decltype(arg)>;
+
+        if constexpr (std::is_same_v<U, moonlisp::Atom>) {
+          os << indent(depth) << "Atom(" << get_string(arg.type) << "): \""
+             << arg.value << "\"\n";
+        } else if constexpr (std::is_same_v<U, moonlisp::List>) {
+          os << indent(depth) << "List:\n";
+          for (auto const &elem : arg.elements) {
+            viewAST(elem, depth + 1, os);
+          }
+        } else if constexpr (std::is_same_v<U, moonlisp::Pair>) {
+          os << indent(depth) << "Pair:\n";
+          for (auto const &elem : arg.elements) {
+            viewAST(elem, depth + 1, os);
+          }
+        } else {
+          static_assert(!sizeof(U *),
+                        "Unknown variant alternative in moonlisp::Node");
+        }
+      },
+      node);
+}
+
+// 打印 TopNode
+inline void viewAST(const moonlisp::TopNode &top, std::ostream &os = std::cout)
+{
+  os << "=== AST BEGIN ===\n";
+  int idx = 0;
+  for (auto const &n : top) {
+    os << "-- Node #" << idx++ << " --\n";
+    viewAST(n, /*depth*/ 1, os);
+  }
+  os << "=== AST END ===\n";
+}
+
 int main()
 {
   std::cout << std::format("Moonlisp VERSION: {} \n", moonlisp::VERSION);
-  moonlisp::Lexer *lexer;
   std::string text;
   for (;;) {
+    std::cout << "moonlisp> ";
     std::getline(std::cin, text);
     if (text == "(exit)" or text == "(quit)")
       return 0;
-    lexer = new moonlisp::Lexer(text);
-    auto group = lexer->getNext();
-    while (group->type != moonlisp::_EOF) {
-      std::cout << std::format(
-          "Type: {}, Word: {}, Line: {}, Column: {}, in all pos: {}\n",
-          get_string(group->type), group->word, group->line, group->column,
-          group->pos);
-      group = lexer->getNext();
+    auto lexer = std::make_unique<moonlisp::Lexer>(text);
+    try {
+      auto parser = std::make_unique<moonlisp::Parser>(std::move(lexer));
+      for (auto &i : parser->getAST()) {
+        viewAST(i);
+      }
     }
-    delete lexer;
+    catch (moonlisp::ParserError &e) {
+      std::cerr << e.what() << '\n';
+    }
+    catch (moonlisp::LexerError &e) {
+      std::cerr << e.what() << '\n';
+    }
   }
 
   return EXIT_SUCCESS;

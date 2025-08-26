@@ -42,7 +42,14 @@ export namespace moonlisp
     explicit Lexer(std::string_view);
     std::vector<std::unique_ptr<LexerStruct>> getGroupStruct();
     std::unique_ptr<LexerStruct> getNext();
-    
+    void reset()
+    {
+      this->inputPos = 0;
+      this->line = 1;
+      this->column = 0;
+      this->current = EOF;
+      this->next();
+    }
     private:
     char next();
     char peek();

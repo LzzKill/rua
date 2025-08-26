@@ -17,20 +17,24 @@ target_sources(${PROJECT_NAME}
   "module/constant.ixx"
   "module/exception.ixx"
   "module/lexer.ixx"
+  "module/ast.ixx"
+  "module/parser.ixx"
 )
 
 # Source File
 target_sources(${PROJECT_NAME}
   PRIVATE
-  "source/main.cpp"
   "source/lexer.cpp"
+  "source/parser.cpp"
+  
+  "source/main.cpp"
 )
 
 if(MSVC)
   target_compile_options(${PROJECT_NAME} PRIVATE 
     "/experimental:module"
-    "/std:c++latest"
     "/permissive-"
+    "/ZI"
   )
   
   set_target_properties(${PROJECT_NAME} PROPERTIES

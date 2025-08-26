@@ -43,8 +43,8 @@ char moonlisp::Lexer::next()
 
 char moonlisp::Lexer::peek()
 {
-  if (this->inputPos + 1 < this->input.length()) {
-    return this->input[this->inputPos + 1];
+  if (this->inputPos < this->input.length()) {
+    return this->input[this->inputPos];
   }
   return EOF;
 }
@@ -80,6 +80,7 @@ std::unique_ptr<moonlisp::LexerStruct> moonlisp::Lexer::findNumber()
       isFloat = true;
       dotInEnd = true;
       result.push_back(this->current);
+      continue;
     }
     if (isFloat and dotInEnd)
       dotInEnd = false;
