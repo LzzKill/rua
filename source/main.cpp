@@ -40,21 +40,21 @@ std::string_view get_string(moonlisp::LexerType lexer_type)
   }
 }
 
-std::string_view get_string(moonlisp::ASTNodeType node_type)
+std::string_view get_string(moonlisp::ast::NodeType node_type)
 {
-  using moonlisp::ASTNodeType;
+  using moonlisp::ast::NodeType;
   switch (node_type) {
-  case ASTNodeType::FLOAT:
+  case NodeType::FLOAT:
     return "FLOAT";
-  case ASTNodeType::LIST:
+  case NodeType::LIST:
     return "LIST";
-  case ASTNodeType::PAIR:
+  case NodeType::PAIR:
     return "PAIR";
-  case ASTNodeType::NUMBER:
+  case NodeType::NUMBER:
     return "NUMBER";
-  case ASTNodeType::STRING:
+  case NodeType::STRING:
     return "STRING";
-  case ASTNodeType::NAME:
+  case NodeType::NAME:
     return "NAME"; // ← 缺这个！
   }
   return "UNKNOWN"; // ← 兜底，避免 UB
@@ -83,7 +83,7 @@ template <typename T> decltype(auto) deref(T &x)
 }
 
 // 递归打印单个 Node
-inline void viewAST(const moonlisp::Node &node, int depth = 0,
+inline void viewAST(const moonlisp::ast::Node &node, int depth = 0,
                     std::ostream &os = std::cout)
 {
   std::visit(
@@ -92,15 +92,15 @@ inline void viewAST(const moonlisp::Node &node, int depth = 0,
         auto const &arg = deref(arg_raw);
         using U = std::decay_t<decltype(arg)>;
 
-        if constexpr (std::is_same_v<U, moonlisp::Atom>) {
+        if constexpr (std::is_same_v<U, moonlisp::ast::Atom>) {
           os << indent(depth) << "Atom(" << get_string(arg.type) << "): \""
              << arg.value << "\"\n";
-        } else if constexpr (std::is_same_v<U, moonlisp::List>) {
+        } else if constexpr (std::is_same_v<U, moonlisp::ast::List>) {
           os << indent(depth) << "List:\n";
           for (auto const &elem : arg.elements) {
             viewAST(elem, depth + 1, os);
           }
-        } else if constexpr (std::is_same_v<U, moonlisp::Pair>) {
+        } else if constexpr (std::is_same_v<U, moonlisp::ast::Pair>) {
           os << indent(depth) << "Pair:\n";
           for (auto const &elem : arg.elements) {
             viewAST(elem, depth + 1, os);
@@ -114,7 +114,7 @@ inline void viewAST(const moonlisp::Node &node, int depth = 0,
 }
 
 // 打印 TopNode
-inline void viewAST(const moonlisp::TopNode &top, std::ostream &os = std::cout)
+inline void viewAST(const moonlisp::ast::TopNode &top, std::ostream &os = std::cout)
 {
   os << "=== AST BEGIN ===\n";
   int idx = 0;

@@ -17,6 +17,11 @@ module moonlisp.parser;
 import moonlisp.lexer;
 import moonlisp.exception;
 
+using moonlisp::ast::Atom;
+using moonlisp::ast::List;
+using moonlisp::ast::Node;
+using moonlisp::ast::Pair;
+
 moonlisp::Parser::Parser(std::unique_ptr<Lexer> lexer)
     : lexer(std::move(lexer)), lex(nullptr)
 {
@@ -46,13 +51,12 @@ void moonlisp::Parser::getNext()
   try {
     this->lex = this->lexer->getNext();
   }
-  catch (LexerError err) {
+  catch (LexerError& err) {
     err.show();
-    this->lex = nullptr;
   }
 }
 
-moonlisp::Node moonlisp::Parser::parseList()
+Node moonlisp::Parser::parseList()
 {
   this->getNext();
   auto node = std::make_unique<List>();
@@ -81,7 +85,7 @@ moonlisp::Node moonlisp::Parser::parseList()
   return node;
 }
 
-moonlisp::Node moonlisp::Parser::parsePair()
+Node moonlisp::Parser::parsePair()
 { // 只处理 pair
   auto node = std::make_unique<Pair>();
   this->getNext();
@@ -111,10 +115,10 @@ moonlisp::Node moonlisp::Parser::parsePair()
   return node;
 }
 
-moonlisp::Node moonlisp::Parser::parseAtom()
+Node moonlisp::Parser::parseAtom()
 {
   return Node(std::make_unique<Atom>(
-      Atom{getNodeType(this->lex->type), std::move(this->lex->word)}));
+      Atom{ast::getNodeType(this->lex->type), std::move(this->lex->word)}));
 }
 
 bool moonlisp::Parser::isBracket()

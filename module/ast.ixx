@@ -10,16 +10,25 @@
 module;
 #include <memory>
 #include <string>
-#include <utility>
 #include <variant>
 #include <vector>
 
 export module moonlisp.ast;
 
-import moonlisp.constant;
+import moonlisp.lexer;
 
-export namespace moonlisp
+export namespace moonlisp::ast
 {
+  enum class NodeType
+  {
+    // atom;
+    FLOAT,
+    NUMBER,
+    NAME,
+    STRING,
+    LIST,
+    PAIR,
+  };
 
   struct Atom;
   struct List;
@@ -32,19 +41,19 @@ export namespace moonlisp
 
   struct Atom
   {
-    ASTNodeType type;
+    NodeType type;
     std::string value;
   };
 
   struct List
   {
-    ASTNodeType type = ASTNodeType::LIST;
+    NodeType type = NodeType::LIST;
     std::vector<Node> elements;
   };
 
   struct Pair
   {
-    ASTNodeType type = ASTNodeType::PAIR;
+    NodeType type = NodeType::PAIR;
     std::vector<Node> elements;
   };
 
@@ -52,17 +61,17 @@ export namespace moonlisp
 
   // 辅助函数
   
-  ASTNodeType getNodeType(moonlisp::LexerType type)
+  NodeType getNodeType(moonlisp::LexerType type)
   {
     switch (type) {
     case FLOAT:
-      return ASTNodeType::FLOAT;
+      return NodeType::FLOAT;
     case NUMBER:
-      return ASTNodeType::NUMBER;
+      return NodeType::NUMBER;
     case STRING:
-      return ASTNodeType::STRING;
+      return NodeType::STRING;
     default:
-      return ASTNodeType::NAME;
+      return NodeType::NAME;
     }
   };
 
@@ -89,25 +98,6 @@ export namespace moonlisp
           Atom(NUMBER, "1"),
           Atom(NUMBER, "2")
         }
-      }
-    }
-  }
-
-  TopNode
-  {
-    Node
-    {
-      Node(NAME, "print"),
-      Node(NUMBER, "1")
-    },
-    Node
-    {
-      Node(NAME, "print"),
-      Node
-      {
-        Node(NAME, "+"),
-        Node(NUMBER, "1"),
-        Node(NUMBER, "2")
       }
     }
   }

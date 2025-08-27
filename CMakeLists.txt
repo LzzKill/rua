@@ -19,6 +19,10 @@ target_sources(${PROJECT_NAME}
   "module/lexer.ixx"
   "module/ast.ixx"
   "module/parser.ixx"
+  "module/runtime/eval.ixx"
+  "module/runtime/value.ixx"
+  
+
 )
 
 # Source File
@@ -26,8 +30,9 @@ target_sources(${PROJECT_NAME}
   PRIVATE
   "source/lexer.cpp"
   "source/parser.cpp"
-  
   "source/main.cpp"
+  "source/runtime/eval.cpp"
+  "source/runtime/value.cpp"
 )
 
 if(MSVC)

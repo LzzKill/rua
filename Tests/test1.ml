@@ -1,0 +1,6 @@
+(print "Hello Lisp!")
+(set x 28)
+(set y 80)
+(set z (+ x y))
+(print z)
+(exit)
