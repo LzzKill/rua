@@ -10,8 +10,8 @@
 module;
 #include <exception>
 #include <format>
+#include <iostream>
 #include <string>
-
 export module moonlisp.exception;
 
 import moonlisp.lexer;
@@ -31,9 +31,9 @@ export namespace moonlisp
     {
     }
 
-    const char *what() const override { return this->message.c_str(); }
+    const char *what() const noexcept override { return this->message.c_str(); }
+    void show() const { std::cerr << this->message << "\n"; }
   };
-
   class LexerError : public MoonlispError
   {
     public:

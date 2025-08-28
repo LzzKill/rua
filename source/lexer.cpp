@@ -20,7 +20,6 @@ module moonlisp.lexer;
 import moonlisp.exception;
 
 using moonlisp::LexerStruct_p;
-using moonlisp::LexerStructValue_t;
 using moonlisp::Place;
 ;
 
@@ -84,14 +83,13 @@ std::unique_ptr<moonlisp::LexerStruct> moonlisp::Lexer::getNext()
     if (util::isSymbol(this->current)) { //
       if (!text.empty())
         return this->makeLexerStruct(NAME, text);
-      return this->makeStringLexerStruct();
+      return this->makeSymbolLexerStruct();
     }
 
     if (util::isNumber(this->current)) {
       if (!text.empty())
         goto _DEFAULT;
-      return makeNumberLexerStruct<false>(); // include double able: number or
-                                             // float;
+      return makeNumberLexerStruct<false>();
     }
     if (util::isWhitespace(this->current)) {
       if (!text.empty())
@@ -116,7 +114,7 @@ std::unique_ptr<moonlisp::LexerStruct> moonlisp::Lexer::getNext()
     text.push_back(this->current);
     this->next();
   }
-  return this->makeLexerStruct(_EOF, {});
+  return this->makeLexerStruct(_EOF, text);
 }
 
 LexerStruct_p moonlisp::Lexer::makeSymbolLexerStruct()
@@ -133,9 +131,12 @@ LexerStruct_p moonlisp::Lexer::makeSymbolLexerStruct()
     break;
   }
   case '-': // 负数？
-    if (util::isNumber(this->peek()))
+    if (util::isNumber(this->peek())) {
+      this->next();
       return this->makeNumberLexerStruct<true>();
+    }
   case '+': // ++ 或者 --
+
     if (this->peek() == this->current)
       temp.push_back(this->next());
     break;
@@ -147,16 +148,16 @@ LexerStruct_p moonlisp::Lexer::makeSymbolLexerStruct()
 template <bool minus> LexerStruct_p moonlisp::Lexer::makeNumberLexerStruct()
 {
   bool isFloat = false;
-  std::string result;
-
+  std::string result { };
   if constexpr (minus)
     result.push_back('-');
-
+  result.push_back(this->current);
+  
   while (util::isNumber(this->peek()) or
          this->peek() == '.') { // 保证下一个是数字或者点
     if (this->next() == '.') {
       if (isFloat) {
-        throw LexerError(this->line, this->column, "multiple dots");
+        throw LexerError(this->place, "multiple dots");
         continue;
       }
       isFloat = true;
@@ -166,12 +167,8 @@ template <bool minus> LexerStruct_p moonlisp::Lexer::makeNumberLexerStruct()
     result.push_back(this->current);
   }
   this->next();
-  if (isFloat) {
-    return this->makeLexerStruct(FLOAT,
-                                 std::stod(result)); // 末尾是dot，可以通过吗？
-  } else {
-    return this->makeLexerStruct(NUMBER, std::stoi(result););
-  }
+
+  return this->makeLexerStruct(isFloat ? FLOAT : NUMBER, result);
 }
 
 LexerStruct_p moonlisp::Lexer::makeStringLexerStruct()
@@ -213,7 +210,7 @@ LexerStruct_p moonlisp::Lexer::makeStringLexerStruct()
 }
 
 LexerStruct_p moonlisp::Lexer::makeLexerStruct(LexerType type,
-                                               LexerStructValue_t value)
+                                               std::string &value)
 {
   return std::make_unique<LexerStruct>(type, std::move(value), this->place);
 }

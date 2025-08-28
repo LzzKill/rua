@@ -9,13 +9,13 @@
 
 module;
 #include <format>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
-#include <iostream>
 module moonlisp.parser;
 
 import moonlisp.lexer;
@@ -32,27 +32,15 @@ void moonlisp::Parser::parse()
   while (this->lex and this->lex->type != _EOF) {
     switch (this->lex->type) {
     case SYMBOL:
-      std::visit(
-          [&](std::string &args) {
-            if (args == "(")
-              this->parseList();
-          },
-          this->lex->word);
+      if (this->lex->word == "(")
+        this->node.push_back(this->parseList());
       break;
     case _EOF:
       break;
     default:
-      auto s = std::visit(
-          [&](auto &&a) -> std::string {
-            using T = std::decay_t<decltype(a)>;
-            if constexpr (std::is_same_v<T, int> or std::is_same_v<T, double>)
-              return std::to_string(a);
-            else // std::string
-              return a;
-          },
-          this->lex->word);
-      throw ParserError(this->lex->place,
-                        std::format("Fields that shouldn't appear: {}", s));
+      throw ParserError(
+          this->lex->place,
+          std::format("Fields that shouldn't appear: {}", this->lex->word));
     }
     this->getNext();
   }
@@ -64,7 +52,7 @@ void moonlisp::Parser::getNext()
     this->lex = this->lexer->getNext();
   }
   catch (const LexerError &err) {
-    std::cerr << err.what() << '\n'; 
+    err.show();
   }
 }
 
@@ -77,7 +65,7 @@ Node moonlisp::Parser::parseList()
       char a = this->lex->word[0];
       switch (a) {
       case ')':
-        return node;
+        return Node{std::move(node), this->lex->place};
       case '(': { // 子对象
         node->elements.push_back(this->parseList());
         break;
@@ -86,15 +74,14 @@ Node moonlisp::Parser::parseList()
         node->elements.push_back(this->parsePair());
         break;
       case ']':
-        throw ParserError(this->lex->line, this->lex->column, "Unmatched ']'");
+        throw ParserError(this->lex->place, "Unmatched ']'");
       }
     } else
       node->elements.push_back(this->parseAtom());
     this->getNext();
   }
-  throw ParserError(this->lex->line, this->lex->column,
-                    "List not closed with ')'");
-  return node;
+  throw ParserError(this->lex->place, "List not closed with ')'");
+  return Node{std::move(node), this->lex->place};
 }
 
 Node moonlisp::Parser::parsePair()
@@ -106,7 +93,7 @@ Node moonlisp::Parser::parsePair()
       char a = this->lex->word[0];
       switch (a) {
       case ']':
-        return node;
+        return Node{std::move(node), this->lex->place};
       case '[': { // 子对象
         node->elements.push_back(this->parsePair());
         break;
@@ -115,22 +102,25 @@ Node moonlisp::Parser::parsePair()
         node->elements.push_back(this->parseList());
         break;
       case ')':
-        throw ParserError(this->lex->line, this->lex->column, "Unmatched ')'");
+        throw ParserError(this->lex->place, "Unmatched ')'");
       }
 
     } else
       node->elements.push_back(this->parseAtom());
     this->getNext();
   }
-  throw ParserError(this->lex->line, this->lex->column,
-                    "Pair not closed with ']'");
-  return node;
+  throw ParserError(this->lex->place, "Pair not closed with ']'");
+  return Node{std::move(node), this->lex->place};
 }
 
 Node moonlisp::Parser::parseAtom()
-{
-  return Node(std::make_unique<Atom>(
-      Atom{ast::getNodeType(this->lex->type), std::move(this->lex->word)}));
+{ // dot
+  if (this->lex->word == ".")
+    return Node{std::make_unique<Atom>(Atom{ast::NodeType::DOT, {}}),
+                this->lex->place};
+  return Node{(std::make_unique<Atom>(Atom{ast::getNodeType(this->lex->type),
+                                           std::move(this->lex->word)})),
+              this->lex->place};
 }
 
 bool moonlisp::Parser::isBracket()

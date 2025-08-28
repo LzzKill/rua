@@ -55,7 +55,9 @@ std::string_view get_string(moonlisp::ast::NodeType node_type)
   case NodeType::STRING:
     return "STRING";
   case NodeType::NAME:
-    return "NAME"; // ← 缺这个！
+    return "NAME";
+  case NodeType::DOT:
+    return "DOT";
   }
   return "UNKNOWN"; // ← 兜底，避免 UB
 }
@@ -110,11 +112,12 @@ inline void viewAST(const moonlisp::ast::Node &node, int depth = 0,
                         "Unknown variant alternative in moonlisp::Node");
         }
       },
-      node);
+      node.node);
 }
 
 // 打印 TopNode
-inline void viewAST(const moonlisp::ast::TopNode &top, std::ostream &os = std::cout)
+inline void viewAST(const moonlisp::ast::TopNode &top,
+                    std::ostream &os = std::cout)
 {
   os << "=== AST BEGIN ===\n";
   int idx = 0;
@@ -134,10 +137,12 @@ int main()
     std::getline(std::cin, text);
     if (text == "(exit)" or text == "(quit)")
       return 0;
-    auto lexer = std::make_unique<moonlisp::Lexer>(text);
+
     try {
+      auto lexer = std::make_unique<moonlisp::Lexer>(text);
       auto parser = std::make_unique<moonlisp::Parser>(std::move(lexer));
-      for (auto &i : parser->getAST()) {
+      auto m = parser->getAST();
+      for (auto &i : m) {
         viewAST(i);
       }
     }
@@ -147,6 +152,7 @@ int main()
     catch (moonlisp::LexerError &e) {
       std::cerr << e.what() << '\n';
     }
+    std::cerr << std::flush;
   }
 
   return EXIT_SUCCESS;

@@ -31,7 +31,6 @@ export namespace moonlisp
       this->parse();
     };
     ast::TopNode getAST() { return std::move(this->node); }
-    const ast::TopNode &viewAST() const { return this->node; }
 
     private:
     void parse();

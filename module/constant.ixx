@@ -19,8 +19,8 @@ export namespace moonlisp
   constexpr std::string_view LICENSE{"BSD-4-Clause"};
 
   constexpr std::array SYMBOL_TABLE = {
-      '[', ']', '(', ')', '!', '+', '=', '*', '<',
-      '>', '*', '&', '^', '%', ',', '.', '\''}; // {}可作为字面量一部分
+      '[', ']', '(', ')', '!', '+', '-', '=', '*',
+      '<', '>', '*', '&', '^', '%', ',', '.', '\''}; // {}可作为字面量一部分
   constexpr std::array SPACE_TABLE = {' ', '\f', '\t'};
   constexpr std::array NUMBER_TABLE = {'0', '1', '2', '3', '4',
                                        '5', '6', '7', '8', '9'};

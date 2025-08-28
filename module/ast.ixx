@@ -10,11 +10,13 @@
 module;
 #include <memory>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
 export module moonlisp.ast;
 
+import moonlisp.constant;
 import moonlisp.lexer;
 
 export namespace moonlisp::ast
@@ -28,6 +30,7 @@ export namespace moonlisp::ast
     STRING,
     LIST,
     PAIR,
+    DOT
   };
 
   struct Atom;
@@ -63,6 +66,7 @@ export namespace moonlisp::ast
   using TopNode = std::vector<Node>;
 
   // 辅助函数
+  
   NodeType getNodeType(moonlisp::LexerType type)
   {
     switch (type) {
