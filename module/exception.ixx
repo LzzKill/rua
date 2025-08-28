@@ -10,34 +10,54 @@
 module;
 #include <exception>
 #include <format>
-#include <iostream>
 #include <string>
+
 export module moonlisp.exception;
+
+import moonlisp.lexer;
 
 export namespace moonlisp
 {
-  class LexerError : std::exception
+  class MoonlispError : std::exception
   {
-    private:
     std::string message;
 
     public:
-    LexerError(unsigned int line, unsigned int column, std::string message)
-        : message(std::format("{}, in Line: {}, Column: {}", message, line,
-                              column)) { };
-    void show() { std::cerr << this->message << '\n'; };
-    const char *what() const override { return message.c_str(); };
+    MoonlispError(const std::string &error_s, const Place &p,
+                  const std::string &msg)
+        : message(
+              std::format("{} : {} | Place line: {}, column: {}. All pos: {}",
+                          error_s, msg, p[0], p[1], p[2]))
+    {
+    }
+
+    const char *what() const override { return this->message.c_str(); }
   };
-  class ParserError : std::exception
-  {
-    private:
-    std::string message;
 
+  class LexerError : public MoonlispError
+  {
     public:
-    ParserError(unsigned int line, unsigned int column, std::string message)
-        : message(std::format("{}, in Line: {}, Column: {}", message, line,
-                              column)) { };
-    void show() { std::cerr << this->message << '\n'; };
-    const char *what() const override { return message.c_str(); };
+    LexerError(const Place &p, const std::string &msg)
+        : MoonlispError("LexerError", p, msg)
+    {
+    }
+  };
+
+  class ParserError : public MoonlispError
+  {
+    public:
+    ParserError(const Place &p, const std::string &msg)
+        : MoonlispError("ParserError", p, msg)
+    {
+    }
+  };
+
+  class RuntimeError : public MoonlispError
+  {
+    public:
+    RuntimeError(const Place &p, const std::string &msg)
+        : MoonlispError("RuntimeError", p, msg)
+    {
+    }
   };
 } // namespace moonlisp

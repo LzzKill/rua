@@ -21,9 +21,7 @@ target_sources(${PROJECT_NAME}
   "module/parser.ixx"
   "module/runtime/eval.ixx"
   "module/runtime/value.ixx"
-  
-
-)
+ )
 
 # Source File
 target_sources(${PROJECT_NAME}

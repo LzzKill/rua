@@ -10,8 +10,12 @@
 module;
 #include <format>
 #include <memory>
+#include <string>
+#include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
+#include <iostream>
 module moonlisp.parser;
 
 import moonlisp.lexer;
@@ -22,37 +26,45 @@ using moonlisp::ast::List;
 using moonlisp::ast::Node;
 using moonlisp::ast::Pair;
 
-moonlisp::Parser::Parser(std::unique_ptr<Lexer> lexer)
-    : lexer(std::move(lexer)), lex(nullptr)
+void moonlisp::Parser::parse()
 {
   this->getNext(); // 得到第一个 token
   while (this->lex and this->lex->type != _EOF) {
     switch (this->lex->type) {
     case SYMBOL:
-      if (this->lex->word == "(") // 入口点！！
-      {
-        this->node.push_back(this->parseList());
-      }
+      std::visit(
+          [&](std::string &args) {
+            if (args == "(")
+              this->parseList();
+          },
+          this->lex->word);
       break;
     case _EOF:
       break;
     default:
-      throw ParserError(
-          this->lex->line, this->lex->column,
-          std::format("Fields that shouldn't appear: {}", this->lex->word));
+      auto s = std::visit(
+          [&](auto &&a) -> std::string {
+            using T = std::decay_t<decltype(a)>;
+            if constexpr (std::is_same_v<T, int> or std::is_same_v<T, double>)
+              return std::to_string(a);
+            else // std::string
+              return a;
+          },
+          this->lex->word);
+      throw ParserError(this->lex->place,
+                        std::format("Fields that shouldn't appear: {}", s));
     }
     this->getNext();
   }
 }
 
-// private
 void moonlisp::Parser::getNext()
 {
   try {
     this->lex = this->lexer->getNext();
   }
-  catch (LexerError& err) {
-    err.show();
+  catch (const LexerError &err) {
+    std::cerr << err.what() << '\n'; 
   }
 }
 

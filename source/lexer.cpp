@@ -21,7 +21,7 @@ import moonlisp.exception;
 
 using moonlisp::LexerStruct_p;
 using moonlisp::LexerStructValue_t;
-using moonlisp::Place_t;
+using moonlisp::Place;
 ;
 
 char moonlisp::Lexer::next()

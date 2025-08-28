@@ -20,16 +20,21 @@ export namespace moonlisp
 {
   class Parser
   {
-    std::unique_ptr<moonlisp::Lexer> lexer;
+    std::unique_ptr<Lexer> lexer;
     ast::TopNode node;
-    std::unique_ptr<LexerStruct> lex;
+    LexerStruct_p lex;
 
     public:
-    explicit Parser(std::unique_ptr<Lexer>);
+    explicit Parser(std::unique_ptr<Lexer> lexer)
+        : lexer(std::move(lexer)), lex(nullptr)
+    {
+      this->parse();
+    };
     ast::TopNode getAST() { return std::move(this->node); }
     const ast::TopNode &viewAST() const { return this->node; }
 
     private:
+    void parse();
     void getNext();
 
     ast::Node parseList();
