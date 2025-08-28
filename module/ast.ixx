@@ -33,11 +33,14 @@ export namespace moonlisp::ast
   struct Atom;
   struct List;
   struct Pair;
+  using Node_t = std::variant<std::unique_ptr<Atom>, std::unique_ptr<List>,
+                              std::unique_ptr<Pair>>;
 
-  using Node = std::variant<std::unique_ptr<Atom>, std::unique_ptr<List>,
-                            std::unique_ptr<Pair>>;
-
-
+  struct Node
+  {
+    Node_t node;
+    Place place; // 位置信息
+  };
 
   struct Atom
   {
@@ -60,7 +63,6 @@ export namespace moonlisp::ast
   using TopNode = std::vector<Node>;
 
   // 辅助函数
-  
   NodeType getNodeType(moonlisp::LexerType type)
   {
     switch (type) {
@@ -74,32 +76,4 @@ export namespace moonlisp::ast
       return NodeType::NAME;
     }
   };
-
-  /*
-  (print 1)
-  (print (+ 1 2))
-
-  //
-
-  TopNode
-  {
-    List
-    {
-      Atom(NAME, "print"),
-      Atom(NUMBER, "1")
-    },
-    {
-      List
-      {
-        Atom(NAME, "print"),
-        List
-        {
-          Atom(NAME, "+"),
-          Atom(NUMBER, "1"),
-          Atom(NUMBER, "2")
-        }
-      }
-    }
-  }
-  */
 } // namespace moonlisp

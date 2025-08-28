@@ -33,14 +33,14 @@ export namespace moonlisp
     _EOF
   };
 
-  using Place_t = std::array<int, 3>;// line column, pos
+  using Place = std::array<int, 3>;// line column, pos
   using LexerStructValue_t = std::variant<std::string, int, double>;
   
   struct LexerStruct
   {
     LexerType type;
     LexerStructValue_t word;
-    Place_t place;
+    Place place;
   };
 
   using LexerStruct_p = std::unique_ptr<moonlisp::LexerStruct>;
@@ -49,7 +49,7 @@ export namespace moonlisp
   class Lexer
   {
     std::string_view input;
-    Place_t place;
+    Place place;
     char current;
 
     public:
