@@ -10,9 +10,11 @@
 module;
 
 #include <array>
+#include <cstdio>
 #include <memory>
 #include <string>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 export module moonlisp.lexer;
@@ -31,36 +33,42 @@ export namespace moonlisp
     _EOF
   };
 
+  using Place_t = std::array<int, 3>;// line column, pos
+  using LexerStructValue_t = std::variant<std::string, int, double>;
+  
   struct LexerStruct
   {
     LexerType type;
-    std::string word;
-    unsigned int line;
-    unsigned int column;
-    unsigned int pos;
+    LexerStructValue_t word;
+    Place_t place;
   };
+
+  using LexerStruct_p = std::unique_ptr<moonlisp::LexerStruct>;
 
   // TODO: 迭代器
   class Lexer
   {
     std::string_view input;
-    unsigned int line, column, inputPos;
+    Place_t place;
     char current;
 
     public:
-    explicit Lexer(std::string_view);
-    std::vector<std::unique_ptr<LexerStruct>> getGroupStruct();
+    explicit Lexer(std::string_view) : input(input), place(0, 0, 0), current(EOF)
+      {
+    }
+    std::vector<LexerStruct_p> getGroupStruct();
     std::unique_ptr<LexerStruct> getNext();
 
     private:
     char next();
     char peek();
 
-    std::string findSymbol();
-    std::unique_ptr<moonlisp::LexerStruct> findNumber();
-    std::string findString();
+    LexerStruct_p makeSymbolLexerStruct();
+    template<bool>
+    LexerStruct_p makeNumberLexerStruct();
+    LexerStruct_p makeStringLexerStruct();
 
-    inline std::unique_ptr<LexerStruct> makeLexerStruct(LexerType, std::string);
+    inline LexerStruct_p makeLexerStruct(LexerType, LexerStructValue_t);
   };
 
   namespace util
@@ -83,7 +91,7 @@ export namespace moonlisp
     {
       return isInTable(NUMBER_TABLE, c);
     }
-    export constexpr bool isNext(char c) { return isInTable(NEXT_TABLE, c); }
+    export constexpr bool isNextLine(char c) { return isInTable(NEXT_TABLE, c); }
     export constexpr bool isNote(char c) { return isInTable(NOTE_TABLE, c); }
   } // namespace util
 
