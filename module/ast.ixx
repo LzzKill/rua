@@ -23,14 +23,11 @@ export namespace moonlisp::ast
 {
   enum class NodeType
   {
-    // atom;
-    FLOAT,
-    NUMBER,
-    NAME,
     STRING,
-    LIST,
-    PAIR,
-    DOT
+    NUMBER,
+    FLOAT,
+    NAME, // IDENT
+    DOT   // .
   };
 
   struct Atom;
@@ -53,20 +50,18 @@ export namespace moonlisp::ast
 
   struct List
   {
-    NodeType type = NodeType::LIST;
     std::vector<Node> elements;
   };
 
   struct Pair
   {
-    NodeType type = NodeType::PAIR;
     std::vector<Node> elements;
   };
 
   using TopNode = std::vector<Node>;
 
   // 辅助函数
-  
+
   NodeType getNodeType(moonlisp::LexerType type)
   {
     switch (type) {
@@ -80,4 +75,4 @@ export namespace moonlisp::ast
       return NodeType::NAME;
     }
   };
-} // namespace moonlisp
+} // namespace moonlisp::ast

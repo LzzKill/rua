@@ -7,7 +7,6 @@
  *
  * */
 
-
 module;
 #include <string>
 #include <utility>

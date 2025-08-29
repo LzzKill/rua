@@ -116,10 +116,8 @@ Node moonlisp::Parser::parsePair()
 Node moonlisp::Parser::parseAtom()
 { // dot
   if (this->lex->word == ".")
-    return Node{std::make_unique<Atom>(Atom{ast::NodeType::DOT, {}}),
-                this->lex->place};
-  return Node{(std::make_unique<Atom>(Atom{ast::getNodeType(this->lex->type),
-                                           std::move(this->lex->word)})),
+    return Node{std::make_unique<Atom>(Atom{ast::NodeType::DOT,{}}), this->lex->place};
+  return Node{(std::make_unique<Atom>(Atom{ast::getNodeType(this->lex->type), std::move(this->lex->word)})),
               this->lex->place};
 }
 

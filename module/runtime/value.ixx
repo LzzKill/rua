@@ -28,7 +28,7 @@ export namespace moonlisp::runtime
   using Value_p = std::shared_ptr<Value>;
   using ListValue = std::vector<Value_p>;
   using PairValue = std::vector<Value_p>;
-  using NativeFunction = std::function<Value_p(const ListValue)>; // 原生函数
+  using NativeFunction = std::function<Value_p(const ListValue &)>; // 原生函数
 
   struct LambdaFunction // lisp 函数，或者叫 lambda 函数
   {
@@ -39,8 +39,8 @@ export namespace moonlisp::runtime
 
   struct Value
   {
-    using Variant =
-        std::variant<std::string, ListValue, NativeFunction, LambdaFunction>;
+    using Variant = std::variant<std::string, int, double, ListValue,
+                                 NativeFunction, LambdaFunction>;
 
     Variant data;
     explicit Value(Variant v) : data(std::move(v)) { }
@@ -60,18 +60,22 @@ export namespace moonlisp::runtime
     // if exists, return value; else return nullptr
     Value_p get(const std::string &);
 
-    inline void setLocal(const std::string &, Value_p);
-    inline void setGlobal(const std::string &, Value_p);
+    void setLocal(const std::string &, Value_p);
+    void setGlobal(const std::string &, Value_p);
   };
 
   namespace util
   {
-    template <typename T> inline Value_p make_value(T x)
+    template <typename T, bool move = true> inline Value_p make_value(T x)
     {
-      return std::make_shared<Value>(std::move(x));
+      if constexpr (move)
+        return std::make_shared<Value>(std::move(x));
+      else
+        return std::make_shared<Value>(x);
     }
 
-    export auto make_number = make_value<std::string>;
+    export auto make_number = make_value<double, false>;
+    export auto make_float = make_value<int, false>;
     export auto make_string = make_value<std::string>;
     export auto make_list = make_value<ListValue>;
     export auto make_pair = make_value<PairValue>;

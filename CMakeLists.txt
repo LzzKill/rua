@@ -21,17 +21,20 @@ target_sources(${PROJECT_NAME}
   "module/parser.ixx"
   "module/runtime/eval.ixx"
   "module/runtime/value.ixx"
- )
+  "module/runtime/builtin.ixx"
+  "module/runtime.ixx"  
+)
 
 # Source File
 target_sources(${PROJECT_NAME}
   PRIVATE
+  "source/runtime/eval.cpp"
+  "source/runtime/value.cpp"
   "source/lexer.cpp"
   "source/parser.cpp"
   "source/main.cpp"
-  "source/runtime/eval.cpp"
-  "source/runtime/value.cpp"
-)
+
+ )
 
 if(MSVC)
   target_compile_options(${PROJECT_NAME} PRIVATE 
